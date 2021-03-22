@@ -63,41 +63,7 @@ const renderAnimalSightings = () => {
     .then(res => res.json())
     .then(sightings => {
 
-        sightings.forEach((sighting) => {
-            const li = document.createElement('li')
-            li.id = sighting.id
-            const form = document.createElement('form')
-            form.style.display = 'block'
-            
-            li.innerHTML = `
-                <p> ${sighting.description} </p>
-                <img src=${sighting.photo} alt=${sighting.species}>
-                <link href=${sighting.link}>
-                <p>${sighting.likes} Likes</p>
-                <button type="button" class="like"> 💟 </button>
-                <button type="button" class="delete"> ❎ </button>
-                <button type="button" class="toggle"> edit </button>
-            `
-
-            form.innerHTML = `
-                <label for="species">
-                <input type="text" class="species" placeholder="enter species">
-                <br>
-                <label for="photo">
-                <input type="text" class="photo" placeholder="enter photo">
-                <br>
-                <label for="link">
-                <input type="text" class="link" placeholder="enter link">
-                <br>
-                <label for="description">
-                <input type="text" class="description" placeholder="enter description">
-                <br>
-                <button type="submit" class="submit">submit</button>
-            `
-                
-            li.appendChild(form)
-            animalSightingsContainer.appendChild(li)
-        })
+        sightings.forEach((sighting) => renderOneSighting(sighting))
     } )
 
 }
@@ -119,15 +85,6 @@ const renderOneSighting = (sighting) => {
     `
 
     form.innerHTML = `
-        <label for="species">
-        <input type="text" class="species" placeholder="enter species">
-        <br>
-        <label for="photo">
-        <input type="text" class="photo" placeholder="enter photo">
-        <br>
-        <label for="link">
-        <input type="text" class="link" placeholder="enter link">
-        <br>
         <label for="description">
         <input type="text" class="description" placeholder="enter description">
         <br>
@@ -167,17 +124,6 @@ profile.addEventListener('click', (e) => {
 //add edit functionality 
 //for each functionality, update the database 
 
-// const sightingLikeButton = animalSightingsContainer.querySelector('button.like')
-// const sightingDeleteButton = animalSightingsContainer.querySelector('button.delete')
-// const sightingToggleButton = animalSightingsContainer.querySelector('button.toggle')
-
-// const fetchSighting = (id) => {
-//     fetch(http://localhost:3000/animalsightings/`${id}`)
-//     .then(res => res.json())
-//     .then(sighting => console.log(sighting)
-// }
-
-
 animalSightingsContainer.addEventListener('click', (e) => {
 
     if(e.target.matches('button.like')) {
@@ -199,64 +145,48 @@ animalSightingsContainer.addEventListener('click', (e) => {
         .then(sighting => currentLikes.textContent = `${sighting.likes} Likes`)
 
     } else if(e.target.matches('button.delete')) {
-        const li = e.target.closest('li')
 
-       
+        const li = e.target.closest('li')
 
         fetch(`http://localhost:3000/animalsightings/${li.id}`, {
             method: 'DELETE'
         })
         .then(response => response.json())
-        .then(() => remove(li))
+        .then(() => li.remove())
 
 
     } else if(e.target.matches('button.toggle')) {
 
-        //TOGGLE FORM
         const li = e.target.closest('li')
         const form = e.target.nextElementSibling
-        form.style.display = form.style.display === "block" ? "none" : "block"
+        
+        form.style.display = form.style.display === "block" ? "none":"block"
 
+        //update description
+         if(form.style.display === "block") {
+             form.addEventListener('submit', (e) => {
+                e.preventDefault()
+                console.log('submit')
         
-    } else if (e.target.matches('button.submit')) {
-        e.preventDefault()
-        const li = e.target.closest('li')
-        //form stuff
-        const form = li.querySelector('form')
-        const species = form.querySelector('input.species').value
-        const link = form.querySelector('input.species').value
-        const img = form.querySelector('input.photo').value
-        const description = form.querySelector('input.description').value
-        //view stuff
-
-        const imgView = li.querySelector('img')
-        const descView = li.querySelector('p')
-        const linkView = img.nextElementSibling
+                const description = e.target[0].value
+                const descView = li.querySelector('p')
         
-        
-        
-        fetch(`http://localhost:3000/animalsightings/${li.id}`, {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify({ 
-            species: species,
-            link: link,
-            photo: img,
-            description: description
-        })
-    })
-        .then(res => res.json())
-        .then(sighting => {
-            imgView.src = sighting.photo
-            imgView.alt = sighting.species
-            descView.textContent = sighting.description
-            linkView.src = sighting.link
-
-        })
-        
+                fetch(`http://localhost:3000/animalsightings/${li.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        description: description
+                    })
+                })
+                .then(res => res.json())
+                .then(sighting => {
+                    descView.textContent = sighting.description
+                    })
+            })
+        }
     }
 })
 
@@ -291,10 +221,4 @@ newSightingForm.addEventListener('submit', (e) => {
     })
         .then(res => res.json())
         .then(sighting => renderOneSighting(sighting))
-
-    
-
-
-
-    console.log('clicked')
 })
